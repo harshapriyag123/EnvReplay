@@ -12,7 +12,7 @@ This is an **executable integration with Bob Shell**. [Bob repair experiment #6]
 
 ## Incident Room interface
 
-The judge-facing [Incident Room](docs/index.html) is a responsive, static evidence viewer. It loads sanitized copies of the real configuration files, before/after run report, and Bob patch from `docs/data/`. The four stages are **Symptom → Replay → Bob repair → Verification**. Replay and patch tabs show the actual captured outputs and diff; the evidence section links to the raw files. The page clearly labels the run as archived. It does not execute Python or Bob in a browser.
+The judge-facing [live Incident Room](https://harshapriyag123.github.io/EnvReplay/) is a responsive, static evidence viewer. It loads sanitized copies of the real configuration files, before/after run report, and Bob patch from `docs/data/`. The four stages are **Symptom → Replay → Bob repair → Verification**. Replay and patch tabs show the actual captured outputs and diff; the evidence section links to the raw files. The page clearly labels the run as archived. It does not execute Python or Bob in a browser.
 
 Run it locally with Python only:
 
@@ -23,7 +23,7 @@ python3 -m http.server 8000 --directory docs
 
 Open `http://localhost:8000/`. If the source evidence changes, run `python3 site/build.py` and commit the updated `docs/data/` copies; CI rejects stale copies. No frontend package install, server API, or key is needed.
 
-**Public hosting:** The `docs/` folder is ready for GitHub Pages. In this repository's **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose **main** and **/docs**, then save. After GitHub reports a published site and its URL, put that verified URL into the lablab submission. The expected default URL is `https://harshapriyag123.github.io/EnvReplay/`; do not present it as live until Pages reports a successful deployment. The repo owner must enable Pages once; the source is already public-safe.
+**Public hosting:** GitHub Pages publishes `docs/` from `main` at https://harshapriyag123.github.io/EnvReplay/. [The Pages deployment succeeded](https://github.com/harshapriyag123/EnvReplay/actions/runs/36224551935). The page contains public-safe evidence only; it does not require Bob credentials.
 
 ## Setup and replay
 
