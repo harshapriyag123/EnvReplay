@@ -10,6 +10,21 @@ EnvReplay gives IBM Bob a reproducible deployment-only failure, then independent
 
 This is an **executable integration with Bob Shell**. [Bob repair experiment #6](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110) ran the official IBM Bob Shell and independently verified a real repair. Its sanitized [report](evidence/bob-run-6/report.md), [original failing output](evidence/bob-run-6/before.json), and [Bob-generated patch](evidence/bob-run-6/bob.diff) are checked in for review. The hackathon guide separately requires real Bob IDE task-session summary screenshots; this Shell report cannot replace them.
 
+## Incident Room interface
+
+The judge-facing [Incident Room](docs/index.html) is a responsive, static evidence viewer. It loads sanitized copies of the real configuration files, before/after run report, and Bob patch from `docs/data/`. The four stages are **Symptom → Replay → Bob repair → Verification**. Replay and patch tabs show the actual captured outputs and diff; the evidence section links to the raw files. The page clearly labels the run as archived. It does not execute Python or Bob in a browser.
+
+Run it locally with Python only:
+
+```sh
+python3 site/build.py --check
+python3 -m http.server 8000 --directory docs
+```
+
+Open `http://localhost:8000/`. If the source evidence changes, run `python3 site/build.py` and commit the updated `docs/data/` copies; CI rejects stale copies. No frontend package install, server API, or key is needed.
+
+**Public hosting:** The `docs/` folder is ready for GitHub Pages. In this repository's **Settings → Pages → Build and deployment**, select **Deploy from a branch**, choose **main** and **/docs**, then save. After GitHub reports a published site and its URL, put that verified URL into the lablab submission. The expected default URL is `https://harshapriyag123.github.io/EnvReplay/`; do not present it as live until Pages reports a successful deployment. The repo owner must enable Pages once; the source is already public-safe.
+
 ## Setup and replay
 
 Requires Python 3.10 or newer. From this directory:
@@ -40,16 +55,20 @@ In this repository's **Settings → Secrets and variables → Actions**, create 
 
 ## Two-minute demo path
 
-1. Open [Bob repair experiment #6](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110) and the [verified report](evidence/bob-run-6/report.md): Bob task `0a1c9ea43c93eb037a283ffe760d0825` ran on the isolated original failing commit. CI was 0 before and after; deployment and regression each changed from exit code 1 to 0.
-2. Show the actual [baseline HTTP output](evidence/bob-run-6/before.json) and the [Bob-generated change to `app.py` and `replay.py`](evidence/bob-run-6/bob.diff). The missing `/service` prefix caused a 404 under deployment configuration.
-3. Run `python3 demo.py` to repeat the live checks on the reference repair currently on `main`. Explain that this main-branch repair was independently authored by Codex; the Bob patch lives in the run artifact and checked-in evidence.
-4. Show the required Bob IDE task-session summary screenshots separately once captured. The Shell run is authentic but does not establish an IDE session.
+1. Open the Incident Room. At **Symptom**, compare the two base paths and the recorded HTTP 200/404 responses.
+2. At **Replay**, show `python3 replay.py --profile deployment` exiting 1 before Bob. Switch to **After Bob** and show the same command exiting 0.
+3. At **Bob repair**, open the actual task ID and source patch. Explain that run #6 began from the failing commit in an isolated worktree, while the prior reference repair on `main` was authored by Codex.
+4. At **Verification**, show CI 0→0, deployment 1→0, and regression 1→0. Expand the exact commands and outputs, then follow the source links to the real report. Show the required Bob IDE task-session summary screenshots separately once captured.
+
+For a live terminal demonstration, run `python3 demo.py` on the repaired `main` checkout. This executes the current replay and regression commands; it is separate from Bob's archived run.
 
 ## Architecture
 
 `config/*.json` selects a public base path → `replay.py` starts a matching `app.py` server instance → a real HTTP request checks the expected path and response → `demo.py` presents the preserved baseline beside new command output. The regression suite also checks that unrelated root paths return 404 and malformed base paths are rejected.
 
 The Bob runner checks out the failing Git revision in a detached worktree, probes it, invokes `bob run` against that worktree, probes again, and exports a report and patch. The main checkout stays clean.
+
+The Incident Room is plain HTML, CSS, and JavaScript in `docs/`. `site/build.py` copies only the five allowlisted public evidence and configuration files to `docs/data/`. The browser fetches these files and refuses to present the success story if the report, patch, baseline, or expected HTTP outcomes disagree. GitHub Pages can serve `docs/` directly; no Bob credentials are present in the published files.
 
 ## File map
 
@@ -61,6 +80,8 @@ The Bob runner checks out the failing Git revision in a detached worktree, probe
 - `evidence/after.log`: output from the local repaired run.
 - `evidence/repair-report.md`: results, attribution, and limitations.
 - `evidence/bob-run-6/`: sanitized real Bob Shell report, before/after results, and the generated patch.
+- `docs/`: responsive Incident Room and generated public evidence copies for GitHub Pages.
+- `site/build.py`: evidence synchronization and drift check.
 - `.github/workflows/verify.yml`: CI replay on pushes and pull requests.
 - `bob_workflow.py`: isolated Bob Shell execution and independent verification.
 - `.github/workflows/bob-repair.yml`: manually triggered experiment with the repository secret.

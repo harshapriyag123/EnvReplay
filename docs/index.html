@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#091322">
+  <meta name="description" content="EnvReplay: inspect a deployment-only failure and IBM Bob's independently verified repair.">
+  <title>Incident Room · EnvReplay</title>
+  <link rel="stylesheet" href="./styles.css">
+  <script defer src="./app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#main">Skip to incident</a>
+  <header class="topbar">
+    <a class="brand" href="#top" aria-label="EnvReplay home"><span class="brand-mark" aria-hidden="true">E<span>↗</span></span><span>ENV<span class="brand-light">REPLAY</span></span></a>
+    <span class="topbar-sep" aria-hidden="true"></span>
+    <span class="topbar-title">INCIDENT ROOM <span class="topbar-version">/ 001</span></span>
+    <a class="topbar-github" href="https://github.com/harshapriyag123/EnvReplay" target="_blank" rel="noopener noreferrer">View repository <span aria-hidden="true">↗</span></a>
+  </header>
+
+  <main id="main">
+    <section class="hero container" id="top" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow"><span class="pulse" aria-hidden="true"></span> REAL INCIDENT / PRESERVED EVIDENCE</p>
+        <h1 id="hero-title">Green in CI.<br><em>Broken on deploy.</em></h1>
+        <p class="hero-description">One missing base path turned a passing health check into a deployment 404. Replay the evidence, inspect Bob’s repair, and check the result.</p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#symptom">Explore incident <span aria-hidden="true">↘</span></a>
+          <a class="button button-ghost" href="https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110" target="_blank" rel="noopener noreferrer">Open Bob run #6 <span aria-hidden="true">↗</span></a>
+        </div>
+      </div>
+      <div class="hero-signal" aria-label="Incident status">
+        <div class="signal-top"><span>INCIDENT / ER-001</span><span class="signal-dot">● &nbsp; VERIFIED REPAIR</span></div>
+        <div class="signal-route"><span>REQUEST</span><code id="hero-request">—</code></div>
+        <div class="signal-comparison"><div><span>CI / BEFORE</span><strong class="ink-cyan" id="hero-ci-http">—</strong><small>observed</small></div><div class="signal-arrow" aria-hidden="true">≠</div><div><span>DEPLOY / BEFORE</span><strong class="ink-amber" id="hero-http">—</strong><small>observed</small></div></div>
+        <div class="signal-bottom"><span>BASE PATH DRIFT</span><span>PYTHON SERVICE</span></div>
+      </div>
+    </section>
+
+    <div class="body-grid container">
+      <aside class="rail" aria-label="Investigation stages">
+        <p class="rail-heading">INVESTIGATION</p>
+        <nav class="stage-nav">
+          <a href="#symptom"><span>01</span><strong>Symptom</strong></a>
+          <a href="#replay"><span>02</span><strong>Replay</strong></a>
+          <a href="#bob"><span>03</span><strong>Bob repair</strong></a>
+          <a href="#verification"><span>04</span><strong>Verification</strong></a>
+        </nav>
+        <div class="rail-note"><span class="note-icon" aria-hidden="true">i</span><span>This is a preserved run. Commands shown here were executed in GitHub Actions on the isolated failing revision.</span></div>
+      </aside>
+
+      <div class="stages" id="incident-content" aria-busy="true">
+        <div class="load-message" id="loading" role="status">Loading checked-in run evidence…</div>
+        <div class="error-message" id="error" role="alert" hidden><strong>Evidence could not be loaded.</strong><p id="error-detail"></p><button class="button button-ghost" id="retry" type="button">Retry loading</button></div>
+        <div id="loaded" hidden>
+          <section class="stage" id="symptom" aria-labelledby="symptom-title">
+            <div class="stage-head"><span class="step-number">01 / SYMPTOM</span><span class="tag tag-amber">DEPLOYMENT ONLY</span></div>
+            <h2 id="symptom-title">The configuration changes.<br>The route doesn’t.</h2>
+            <p class="section-intro">CI uses the domain root. Deployment places the same service under <code>/service</code>. The original server handled only the root route.</p>
+            <div class="profile-grid">
+              <article class="profile"><div class="profile-head"><span>CI PROFILE</span><span class="profile-symbol ink-cyan">✓</span></div><div class="profile-key">public_base_path</div><code class="profile-value" id="ci-base"></code><div class="profile-request">GET <code id="ci-path"></code></div><div class="profile-footer"><span class="tag tag-cyan" id="ci-http"></span><a href="https://github.com/harshapriyag123/EnvReplay/blob/main/config/ci.json" target="_blank" rel="noopener noreferrer">ci.json ↗</a></div></article>
+              <article class="profile profile-failing"><div class="profile-head"><span>DEPLOYMENT PROFILE</span><span class="profile-symbol ink-amber">!</span></div><div class="profile-key">public_base_path</div><code class="profile-value" id="deployment-base"></code><div class="profile-request">GET <code id="deployment-path"></code></div><div class="profile-footer"><span class="tag tag-amber" id="deployment-http"></span><a href="https://github.com/harshapriyag123/EnvReplay/blob/main/config/deployment.json" target="_blank" rel="noopener noreferrer">deployment.json ↗</a></div></article>
+            </div>
+            <p class="source-line">Source code: <a href="https://github.com/harshapriyag123/EnvReplay/blob/main/app.py" target="_blank" rel="noopener noreferrer">app.py ↗</a> · <a href="https://github.com/harshapriyag123/EnvReplay/blob/main/replay.py" target="_blank" rel="noopener noreferrer">replay.py ↗</a> <span>· The current <code>main</code> repair was authored by Codex.</span></p>
+          </section>
+
+          <section class="stage" id="replay" aria-labelledby="replay-title">
+            <div class="stage-head"><span class="step-number">02 / REPLAY</span><span class="tag tag-muted">CAPTURED COMMAND OUTPUT</span></div>
+            <h2 id="replay-title">See the request fail.</h2><p class="section-intro">These are the original command outputs from Bob run #6. Select a profile to inspect both sides of the repair.</p>
+            <div class="console-shell">
+              <div class="console-toolbar"><div class="tabs" role="tablist" aria-label="Replay check"><button role="tab" aria-selected="true" id="tab-deployment" data-check="deployment" type="button">Deployment</button><button role="tab" aria-selected="false" id="tab-ci" data-check="ci" type="button">CI</button><button role="tab" aria-selected="false" id="tab-regression" data-check="regression" type="button">Regression</button></div><span class="archive-tag">ARCHIVED / RUN #6</span></div>
+              <div class="console-meta"><span id="console-phase">BEFORE REPAIR</span><span id="console-exit"></span></div>
+              <div class="console-content" role="tabpanel" id="console-panel" aria-labelledby="tab-deployment"><div class="command-line"><span aria-hidden="true">$</span> <code id="console-command"></code></div><pre id="console-output"></pre></div>
+              <div class="console-footer"><div class="tabs phase-tabs" role="group" aria-label="Evidence phase"><button class="active" id="phase-before" type="button">Before</button><button id="phase-after" type="button">After Bob</button></div><a id="console-source" href="./data/report.json" target="_blank" rel="noopener noreferrer">Open raw evidence ↗</a></div>
+            </div>
+          </section>
+
+          <section class="stage" id="bob" aria-labelledby="bob-title">
+            <div class="stage-head"><span class="step-number">03 / BOB REPAIR</span><span class="tag tag-green">ACTUAL IBM BOB SHELL RUN</span></div>
+            <h2 id="bob-title">Bob changed the code.<br>We kept the patch.</h2>
+            <p class="section-intro">Bob Shell ran in Agent mode on an isolated checkout of the original failing commit. The patch below is from that run, not a recreation of its conversation.</p>
+            <div class="task-strip"><div><span>BOB TASK ID</span><code id="task-id"></code></div><div><span>RUN RESULT</span><strong id="task-verdict"></strong></div><a href="https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110" target="_blank" rel="noopener noreferrer">GitHub Actions run #6 ↗</a></div>
+            <div class="change-note"><span class="change-glyph" aria-hidden="true">↳</span><p>Bob made the health route aware of the configured base path in <a href="https://github.com/harshapriyag123/EnvReplay/blob/main/app.py" target="_blank" rel="noopener noreferrer">app.py</a>, then passed that base path from the replay in <a href="https://github.com/harshapriyag123/EnvReplay/blob/main/replay.py" target="_blank" rel="noopener noreferrer">replay.py</a>.</p></div>
+            <div class="diff-shell"><div class="diff-header"><span>BOB-GENERATED PATCH</span><a href="./data/bob.diff" target="_blank" rel="noopener noreferrer">Full raw diff ↗</a></div><div class="tabs diff-tabs" role="tablist" aria-label="Changed file"><button role="tab" aria-selected="true" data-file="app.py" id="diff-tab-app" type="button">app.py</button><button role="tab" aria-selected="false" data-file="replay.py" id="diff-tab-replay" type="button">replay.py</button></div><pre id="diff-output" role="tabpanel" aria-labelledby="diff-tab-app"></pre></div>
+          </section>
+
+          <section class="stage" id="verification" aria-labelledby="verification-title">
+            <div class="stage-head"><span class="step-number">04 / VERIFICATION</span><span class="tag tag-green">INDEPENDENT REPLAY</span></div>
+            <h2 id="verification-title">Same checks. Different result.</h2><p class="section-intro">After Bob exited, EnvReplay reran both HTTP profiles and the regression suite. A Bob success response alone could not pass this gate.</p>
+            <div class="result-table-wrap"><table class="result-table"><caption>Actual command exit codes from run #6</caption><thead><tr><th scope="col">CHECK</th><th scope="col">BEFORE</th><th scope="col">AFTER BOB</th><th scope="col">RESULT</th></tr></thead><tbody id="result-rows"></tbody></table></div>
+            <details class="verification-detail"><summary>View exact commands and full output <span aria-hidden="true">＋</span></summary><div id="verification-details"></div></details>
+          </section>
+
+          <section class="stage evidence-stage" id="evidence" aria-labelledby="evidence-title"><div class="stage-head"><span class="step-number">EVIDENCE / PROVENANCE</span><span class="tag tag-muted">PUBLIC-SAFE FILES</span></div><h2 id="evidence-title">Follow the proof.</h2><p class="section-intro">The interface reads checked-in, sanitized files. Open the originals to verify each displayed result.</p><div class="evidence-links"><a href="./data/before.json" target="_blank" rel="noopener noreferrer"><span>01</span><strong>Failing baseline</strong><small>before.json</small><span aria-hidden="true">↗</span></a><a href="./data/report.json" target="_blank" rel="noopener noreferrer"><span>02</span><strong>Independent checks</strong><small>report.json</small><span aria-hidden="true">↗</span></a><a href="https://github.com/harshapriyag123/EnvReplay/blob/main/evidence/bob-run-6/report.md" target="_blank" rel="noopener noreferrer"><span>03</span><strong>Readable report</strong><small>report.md</small><span aria-hidden="true">↗</span></a><a href="./data/bob.diff" target="_blank" rel="noopener noreferrer"><span>04</span><strong>Bob’s code patch</strong><small>bob.diff</small><span aria-hidden="true">↗</span></a></div><div class="limitations"><strong>Scope of this proof</strong><p>The public site displays a preserved Bob Shell run. It does not invoke Bob or replay Python in your browser. Bob’s patch remained in an isolated worktree; the earlier reference repair on <code>main</code> was authored by Codex. Bob Shell evidence does not substitute for the hackathon’s required Bob IDE session screenshots.</p></div><div class="reproduce"><div><span>REPRODUCE LOCALLY</span><code id="reproduce-command">python3 bob_workflow.py prepare</code></div><button id="copy-command" type="button" aria-label="Copy local reproduction command">Copy command</button></div></section>
+        </div>
+      </div>
+    </div>
+  </main>
+  <footer class="footer container"><span>ENVREPLAY <span class="footer-dim">/ INCIDENT ROOM</span></span><span>One real failure. One independently verified Bob repair.</span><a href="#top">Back to top ↑</a></footer>
+</body>
+</html>

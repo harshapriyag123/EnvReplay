@@ -17,3 +17,7 @@ jobs:
           python3 replay.py --profile ci
           python3 replay.py --profile deployment
           python3 -m unittest -v
+      - name: Check Incident Room evidence and JavaScript
+        run: |
+          python3 site/build.py --check
+          node --check docs/app.js
