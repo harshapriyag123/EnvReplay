@@ -9,6 +9,7 @@ from datetime import datetime, timezone
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import sys
@@ -62,6 +63,17 @@ verified by the EnvReplay runner after this session ends.
 """
 
 
+def redacted_error(value, secret):
+    """Keep short diagnostic text while excluding the configured credential."""
+    value = value.replace(secret, "[REDACTED]")
+    value = re.sub(
+        r"(?i)\b(api[-_ ]?key|token|authorization)\s*[:=]\s*\S+",
+        r"\1=[REDACTED]",
+        value,
+    )
+    return value.strip()[:1200]
+
+
 def report_text(report):
     rows = [
         "# EnvReplay: Bob repair verification",
@@ -71,6 +83,7 @@ def report_text(report):
         f"Bob reported: `{report['bob_status']}`",
         f"Bob Shell exit code: `{report['bob_exit_code']}`",
         f"Independent result: **{report['verdict']}**",
+        "Bob error: " + (report["bob_error"] or "none"),
         "",
         "| Check | Before exit | After exit |",
         "| --- | ---: | ---: |",
@@ -136,6 +149,7 @@ def run(args):
             response = json.loads(bob.stdout)
         except json.JSONDecodeError:
             response = {}
+        bob_error = redacted_error(bob.stderr or (bob.stdout if not response else ""), os.environ["BOB_API_KEY"])
         bob_status = response.get("status", "unavailable")
         task_id = response.get("stats", {}).get("task_id", "unavailable")
         after = checks(workspace)
@@ -161,6 +175,7 @@ def run(args):
             "bob_task_id": task_id,
             "bob_status": bob_status,
             "bob_exit_code": bob.returncode,
+            "bob_error": bob_error,
             "bob_executable": shutil.which(args.bob_bin),
             "verdict": verdict,
             "changed_files": changed_files,
@@ -173,7 +188,7 @@ def run(args):
         print(report_text(report))
         print("Evidence directory: " + str(output))
         if bob.returncode and not response:
-            print("Bob Shell failed without a JSON result; check runner logs (do not share secrets).", file=sys.stderr)
+            print("Bob Shell failed without a JSON result; see the redacted Bob error above.", file=sys.stderr)
         return 0 if verdict == "PASS" else 1
     finally:
         if added:
