@@ -30,7 +30,7 @@ jobs:
       - name: Install official IBM Bob Shell
         run: |
           curl -fsSL https://bob.ibm.com/download/bobshell.sh -o /tmp/envreplay-bobshell-install.sh
-          bash /tmp/envreplay-bobshell-install.sh
+          timeout 180s bash /tmp/envreplay-bobshell-install.sh --package-manager npm
       - name: Display IBM Bob license and check user acceptance
         env:
           ACCEPTED: ${{ inputs.accept_ibm_license }}
