@@ -8,7 +8,7 @@ EnvReplay gives IBM Bob a reproducible deployment-only failure, then independent
 2. `bob_workflow.py run` hands the repository paths and actual failure output to **IBM Bob Shell in Agent mode**. Bob investigates, changes the isolated code, runs checks, and reviews its changes. The runner uses a Bobcoin cap and disables external MCP servers.
 3. The runner independently repeats both HTTP replays and the regression suite. It only reports `PASS` if Bob returned success, changed files, and all checks now pass. It saves `report.json`, `report.md`, and `bob.diff` for review. It does not push or merge Bob's patch automatically.
 
-This is an **executable integration with Bob Shell**. It has not yet been run against a real Bob account in this environment. A command transcript or test stub is not proof of Bob usage. The hackathon guide separately requires real Bob IDE task-session summary screenshots; this Shell report cannot replace them.
+This is an **executable integration with Bob Shell**. [Bob repair experiment #6](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110) ran the official IBM Bob Shell and independently verified a real repair. Its sanitized [report](evidence/bob-run-6/report.md), [original failing output](evidence/bob-run-6/before.json), and [Bob-generated patch](evidence/bob-run-6/bob.diff) are checked in for review. The hackathon guide separately requires real Bob IDE task-session summary screenshots; this Shell report cannot replace them.
 
 ## Setup and replay
 
@@ -40,12 +40,10 @@ In this repository's **Settings → Secrets and variables → Actions**, create 
 
 ## Two-minute demo path
 
-1. Show `evidence/baseline.log`: CI returned 200, deployment returned 404, and its regression test failed. This is actual captured output from the baseline commit.
-2. Run `python3 demo.py`. It displays the original failure, reruns both profiles and the tests against the current checkout, and exits nonzero if any live check fails.
-3. Point to `app.py` and `config/deployment.json` to explain why the server now handles `/service/api/health` without also exposing `/api/health` in the deployment profile.
-4. Show `evidence/repair-report.md` for the commands, exit statuses, and scope limits. The GitHub Actions workflow reruns checks on pushes and pull requests.
-
-For a real Bob demo, run the **Bob repair experiment**, download its artifact, and show the actual Bob task ID, its independent before/after checks, and the generated `bob.diff`. Explain that it runs from the original failing commit. Only show an actual Bob run after the workflow succeeds; the historical report is not Bob evidence.
+1. Open [Bob repair experiment #6](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110) and the [verified report](evidence/bob-run-6/report.md): Bob task `0a1c9ea43c93eb037a283ffe760d0825` ran on the isolated original failing commit. CI was 0 before and after; deployment and regression each changed from exit code 1 to 0.
+2. Show the actual [baseline HTTP output](evidence/bob-run-6/before.json) and the [Bob-generated change to `app.py` and `replay.py`](evidence/bob-run-6/bob.diff). The missing `/service` prefix caused a 404 under deployment configuration.
+3. Run `python3 demo.py` to repeat the live checks on the reference repair currently on `main`. Explain that this main-branch repair was independently authored by Codex; the Bob patch lives in the run artifact and checked-in evidence.
+4. Show the required Bob IDE task-session summary screenshots separately once captured. The Shell run is authentic but does not establish an IDE session.
 
 ## Architecture
 
@@ -62,10 +60,11 @@ The Bob runner checks out the failing Git revision in a detached worktree, probe
 - `evidence/baseline.log`: captured output and exit statuses from the first run.
 - `evidence/after.log`: output from the local repaired run.
 - `evidence/repair-report.md`: results, attribution, and limitations.
+- `evidence/bob-run-6/`: sanitized real Bob Shell report, before/after results, and the generated patch.
 - `.github/workflows/verify.yml`: CI replay on pushes and pull requests.
 - `bob_workflow.py`: isolated Bob Shell execution and independent verification.
 - `.github/workflows/bob-repair.yml`: manually triggered experiment with the repository secret.
 
 ## IBM Bob hackathon attribution
 
-The reference repair on `main` was made by Codex at the user's request. **It is not evidence of Bob IDE usage.** The Bob workflow is ready to execute but has not run against IBM Bob here. Before submitting, capture an actual Bob IDE task session summary in `bob_sessions/` as required by the hackathon guide. Do not claim a Bob Shell task was an IDE session or submit substitute screenshots. Never commit an API key or `envreplay.json`.
+The reference repair on `main` was made by Codex at the user's request. **It is not evidence of Bob IDE usage.** IBM Bob Shell independently repaired the original failure in the isolated [successful run #6](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110). Its patch was preserved, not automatically merged into `main`. Before submitting, capture an actual Bob IDE task-session summary in `bob_sessions/` as required by the hackathon guide. Do not claim a Bob Shell task was an IDE session or submit substitute screenshots. Never commit an API key or `envreplay.json`.

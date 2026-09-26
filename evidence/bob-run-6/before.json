@@ -1,0 +1,17 @@
+{
+  "ci": {
+    "command": "python3 replay.py --profile ci",
+    "exit_code": 0,
+    "output": "profile=ci public_base_path=''\nGET /api/health -> HTTP 200 {\"status\": \"ok\"}\nPASS: health endpoint responds under this configuration\n127.0.0.1 - - [26/Sep/2026 06:19:01] \"GET /api/health HTTP/1.1\" 200 -"
+  },
+  "deployment": {
+    "command": "python3 replay.py --profile deployment",
+    "exit_code": 1,
+    "output": "profile=deployment public_base_path='/service'\nGET /service/api/health -> HTTP 404 {\"error\": \"not found\"}\nFAIL: expected HTTP 200 with status=ok\n127.0.0.1 - - [26/Sep/2026 06:19:02] \"GET /service/api/health HTTP/1.1\" 404 -"
+  },
+  "regression": {
+    "command": "python3 -m unittest -v",
+    "exit_code": 1,
+    "output": "profile=ci public_base_path=''\nGET /api/health -> HTTP 200 {\"status\": \"ok\"}\nPASS: health endpoint responds under this configuration\nprofile=deployment public_base_path='/service'\nGET /service/api/health -> HTTP 404 {\"error\": \"not found\"}\nFAIL: expected HTTP 200 with status=ok\ntest_ci_route (test_regression.HealthRouteTests.test_ci_route) ... 127.0.0.1 - - [26/Sep/2026 06:19:02] \"GET /api/health HTTP/1.1\" 200 -\nok\ntest_deployment_route (test_regression.HealthRouteTests.test_deployment_route) ... 127.0.0.1 - - [26/Sep/2026 06:19:03] \"GET /service/api/health HTTP/1.1\" 404 -\nFAIL\n\n======================================================================\nFAIL: test_deployment_route (test_regression.HealthRouteTests.test_deployment_route)\n----------------------------------------------------------------------\nTraceback (most recent call last):\n  File \"/tmp/envreplay-bob-67own0e6/test_regression.py\", line 12, in test_deployment_route\n    self.assertEqual(check(\"deployment\"), 0)\nAssertionError: 1 != 0\n\n----------------------------------------------------------------------\nRan 2 tests in 1.025s\n\nFAILED (failures=1)"
+  }
+}
