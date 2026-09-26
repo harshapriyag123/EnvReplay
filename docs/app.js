@@ -85,15 +85,38 @@
     $('hero-request').textContent = deployment.public_base_path + '/api/health';
     $('hero-ci-http').textContent = httpStatus(state.report.before.ci.output);
     $('hero-http').textContent = httpStatus(state.report.before.deployment.output);
+    $('ribbon-symptom').textContent = 'HTTP ' + httpStatus(state.report.before.deployment.output);
+    $('ribbon-task').textContent = state.report.bob_task_id.slice(0, 8) + '…';
+    $('ribbon-checks').textContent = checks.filter((name) => state.report.after[name].exit_code === 0).length + ' / ' + checks.length;
+    $('proof-ribbon').hidden = false;
   }
 
   function renderReplay() {
-    const item = state.report[state.phase][state.check];
-    $('console-phase').textContent = state.phase === 'before' ? 'BEFORE REPAIR' : 'AFTER BOB REPAIR';
-    $('console-exit').textContent = `EXIT ${item.exit_code}`;
-    $('console-exit').className = item.exit_code === 0 ? 'console-exit-pass' : 'console-exit-fail';
-    $('console-command').textContent = item.command;
-    $('console-output').textContent = item.output;
+    const comparing = state.phase === 'compare';
+    $('console-panel').hidden = comparing;
+    $('compare-panel').hidden = !comparing;
+    $('console-phase').textContent = comparing ? 'SAME COMMAND / TWO ENVIRONMENTS IN TIME' : state.phase === 'before' ? 'BEFORE REPAIR' : 'AFTER BOB REPAIR';
+    $('console-exit').textContent = comparing ? 'BEFORE → AFTER' : `EXIT ${state.report[state.phase][state.check].exit_code}`;
+    $('console-exit').className = comparing ? '' : state.report[state.phase][state.check].exit_code === 0 ? 'console-exit-pass' : 'console-exit-fail';
+    if (comparing) {
+      const panel = $('compare-panel');
+      panel.replaceChildren();
+      for (const [phase, label] of [['before', 'BEFORE REPAIR'], ['after', 'AFTER BOB']]) {
+        const item = state.report[phase][state.check];
+        const pane = document.createElement('div'); pane.className = 'compare-pane ' + (item.exit_code === 0 ? 'compare-pass' : 'compare-fail');
+        const heading = document.createElement('div'); heading.className = 'compare-heading';
+        const title = document.createElement('strong'); title.textContent = label;
+        const exit = document.createElement('span'); exit.textContent = 'EXIT ' + item.exit_code;
+        heading.append(title, exit);
+        const command = document.createElement('div'); command.className = 'command-line'; command.textContent = '$ ' + item.command;
+        const output = document.createElement('pre'); output.textContent = item.output;
+        pane.append(heading, command, output); panel.append(pane);
+      }
+    } else {
+      const item = state.report[state.phase][state.check];
+      $('console-command').textContent = item.command;
+      $('console-output').textContent = item.output;
+    }
     $('console-source').href = state.phase === 'before' ? './data/before.json' : './data/report.json';
     for (const tab of document.querySelectorAll('[data-check]')) {
       const selected = tab.dataset.check === state.check;
@@ -101,10 +124,11 @@
       tab.tabIndex = selected ? 0 : -1;
     }
     $('console-panel').setAttribute('aria-labelledby', 'tab-' + state.check);
-    $('phase-before').classList.toggle('active', state.phase === 'before');
-    $('phase-after').classList.toggle('active', state.phase === 'after');
-    $('phase-before').setAttribute('aria-pressed', String(state.phase === 'before'));
-    $('phase-after').setAttribute('aria-pressed', String(state.phase === 'after'));
+    $('compare-panel').setAttribute('aria-labelledby', 'tab-' + state.check);
+    for (const phase of ['before', 'after', 'compare']) {
+      $('phase-' + phase).classList.toggle('active', state.phase === phase);
+      $('phase-' + phase).setAttribute('aria-pressed', String(state.phase === phase));
+    }
   }
 
   function renderBob() {
@@ -187,6 +211,7 @@
   setupTabs('[data-file]', 'file', (name) => { state.file = name; renderDiff(); });
   $('phase-before').addEventListener('click', () => { state.phase = 'before'; renderReplay(); });
   $('phase-after').addEventListener('click', () => { state.phase = 'after'; renderReplay(); });
+  $('phase-compare').addEventListener('click', () => { state.phase = 'compare'; renderReplay(); });
   $('retry').addEventListener('click', load);
   $('copy-command').addEventListener('click', async () => {
     try {

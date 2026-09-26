@@ -37,6 +37,12 @@
       </div>
     </section>
 
+    <div class="proof-ribbon container" id="proof-ribbon" aria-label="Verified run at a glance" hidden>
+      <a href="#symptom" class="proof-item"><span>01 / BASELINE</span><strong id="ribbon-symptom">—</strong><small>deployment response <span aria-hidden="true">↗</span></small></a>
+      <a href="#bob" class="proof-item"><span>02 / BOB AGENT</span><strong id="ribbon-task">—</strong><small>isolated repair task <span aria-hidden="true">↗</span></small></a>
+      <a href="#verification" class="proof-item"><span>03 / INDEPENDENT GATE</span><strong id="ribbon-checks">—</strong><small>passing checks after repair <span aria-hidden="true">↗</span></small></a>
+    </div>
+
     <div class="body-grid container">
       <aside class="rail" aria-label="Investigation stages">
         <p class="rail-heading">INVESTIGATION</p>
@@ -71,7 +77,8 @@
               <div class="console-toolbar"><div class="tabs" role="tablist" aria-label="Replay check"><button role="tab" aria-selected="true" id="tab-deployment" data-check="deployment" type="button">Deployment</button><button role="tab" aria-selected="false" id="tab-ci" data-check="ci" type="button">CI</button><button role="tab" aria-selected="false" id="tab-regression" data-check="regression" type="button">Regression</button></div><span class="archive-tag">ARCHIVED / RUN #6</span></div>
               <div class="console-meta"><span id="console-phase">BEFORE REPAIR</span><span id="console-exit"></span></div>
               <div class="console-content" role="tabpanel" id="console-panel" aria-labelledby="tab-deployment"><div class="command-line"><span aria-hidden="true">$</span> <code id="console-command"></code></div><pre id="console-output"></pre></div>
-              <div class="console-footer"><div class="tabs phase-tabs" role="group" aria-label="Evidence phase"><button class="active" id="phase-before" type="button">Before</button><button id="phase-after" type="button">After Bob</button></div><a id="console-source" href="./data/report.json" target="_blank" rel="noopener noreferrer">Open raw evidence ↗</a></div>
+              <div class="compare-grid" id="compare-panel" role="tabpanel" aria-labelledby="tab-deployment" hidden></div>
+              <div class="console-footer"><div class="tabs phase-tabs" role="group" aria-label="Evidence phase"><button class="active" id="phase-before" type="button">Before</button><button id="phase-after" type="button">After Bob</button><button id="phase-compare" type="button">Compare ↔</button></div><a id="console-source" href="./data/report.json" target="_blank" rel="noopener noreferrer">Open raw evidence ↗</a></div>
             </div>
           </section>
 
