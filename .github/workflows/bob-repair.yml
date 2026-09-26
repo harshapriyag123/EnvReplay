@@ -31,12 +31,10 @@ jobs:
         run: |
           curl -fsSL https://bob.ibm.com/download/bobshell.sh -o /tmp/envreplay-bobshell-install.sh
           timeout 180s bash /tmp/envreplay-bobshell-install.sh --package-manager npm
-      - name: Display IBM Bob license and check user acceptance
+      - name: Check user license acceptance
         env:
           ACCEPTED: ${{ inputs.accept_ibm_license }}
-        run: |
-          bob --show-license
-          test "$ACCEPTED" = true
+        run: test "$ACCEPTED" = true
       - name: Let Bob diagnose and repair the isolated failing revision
         env:
           BOB_API_KEY: ${{ secrets.BOB_API_KEY }}
