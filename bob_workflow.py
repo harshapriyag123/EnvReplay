@@ -24,9 +24,9 @@ CHECKS = {
 }
 
 
-def command(args, cwd, *, input_text=None):
+def command(args, cwd, *, input_text=None, env=None):
     return subprocess.run(
-        args, cwd=cwd, input=input_text, capture_output=True, text=True, check=False
+        args, cwd=cwd, input=input_text, env=env, capture_output=True, text=True, check=False
     )
 
 
@@ -63,9 +63,28 @@ verified by the EnvReplay runner after this session ends.
 """
 
 
-def redacted_error(value, secret):
+def configured_key():
+    """Accept an Inference key or IBM's downloaded key JSON as the secret."""
+    raw = os.environ.get("BOB_API_KEY", "").strip()
+    if not raw:
+        raise RuntimeError("BOB_API_KEY is missing; set it as a private environment secret")
+    if raw.startswith("{"):
+        try:
+            document = json.loads(raw)
+        except json.JSONDecodeError as exc:
+            raise RuntimeError("BOB_API_KEY JSON is invalid; set its apikey value as the secret") from exc
+        key = document.get("apikey") if isinstance(document, dict) else None
+        if not isinstance(key, str) or not key.strip():
+            raise RuntimeError("BOB_API_KEY JSON has no nonempty apikey field")
+        return key.strip(), "json"
+    return raw, "raw"
+
+
+def redacted_error(value, *secrets):
     """Keep short diagnostic text while excluding the configured credential."""
-    value = value.replace(secret, "[REDACTED]")
+    for secret in secrets:
+        if secret:
+            value = value.replace(secret, "[REDACTED]")
     value = re.sub(
         r"(?i)\b(api[-_ ]?key|token|authorization)\s*[:=]\s*\S+",
         r"\1=[REDACTED]",
@@ -82,6 +101,7 @@ def report_text(report):
         f"Bob executable: `{report['bob_executable']}`",
         f"Bob reported: `{report['bob_status']}`",
         f"Bob Shell exit code: `{report['bob_exit_code']}`",
+        f"API key secret format: `{report['api_key_format']}`",
         f"Independent result: **{report['verdict']}**",
         "Bob error: " + (report["bob_error"] or "none"),
         "",
@@ -108,8 +128,7 @@ def report_text(report):
 
 def run(args):
     if args.mode == "run":
-        if not os.environ.get("BOB_API_KEY"):
-            raise RuntimeError("BOB_API_KEY is missing; set it as a private environment secret")
+        api_key, api_key_format = configured_key()
         if not shutil.which(args.bob_bin):
             raise RuntimeError("Bob Shell executable is unavailable; install it from IBM")
     if command(["git", "cat-file", "-e", BASELINE + "^{commit}"], ROOT).returncode:
@@ -144,12 +163,14 @@ def run(args):
         ]
         if args.accept_license:
             invocation.append("--accept-license")
-        bob = command(invocation, workspace, input_text=instruction)
+        bob_env = os.environ.copy()
+        bob_env["BOB_API_KEY"] = api_key
+        bob = command(invocation, workspace, input_text=instruction, env=bob_env)
         try:
             response = json.loads(bob.stdout)
         except json.JSONDecodeError:
             response = {}
-        bob_error = redacted_error(bob.stderr or (bob.stdout if not response else ""), os.environ["BOB_API_KEY"])
+        bob_error = redacted_error(bob.stderr or (bob.stdout if not response else ""), os.environ["BOB_API_KEY"], api_key)
         bob_status = response.get("status", "unavailable")
         task_id = response.get("stats", {}).get("task_id", "unavailable")
         after = checks(workspace)
@@ -162,8 +183,8 @@ def run(args):
         patch = command(["git", "diff", "--binary", "HEAD"], workspace)
         if patch.returncode:
             raise RuntimeError("Could not inspect the Bob worktree diff")
-        secret = os.environ["BOB_API_KEY"]
-        if any(secret in value for value in (patch.stdout, changed.stdout, json.dumps(after))):
+        secrets = (os.environ["BOB_API_KEY"], api_key)
+        if any(secret in value for secret in secrets if secret for value in (patch.stdout, changed.stdout, json.dumps(after))):
             raise RuntimeError("A result contains the Bob API key; refusing to save it")
         verdict = "PASS" if (
             bob.returncode == 0 and bob_status == "success" and changed_files
@@ -175,6 +196,7 @@ def run(args):
             "bob_task_id": task_id,
             "bob_status": bob_status,
             "bob_exit_code": bob.returncode,
+            "api_key_format": api_key_format,
             "bob_error": bob_error,
             "bob_executable": shutil.which(args.bob_bin),
             "verdict": verdict,
