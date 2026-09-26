@@ -1,0 +1,38 @@
+127.0.0.1 - - [25/Sep/2026 19:20:11] "GET /service/api/health HTTP/1.1" 404 -
+profile=deployment public_base_path='/service'
+GET /service/api/health -> HTTP 404 {"error": "not found"}
+FAIL: expected HTTP 200 with status=ok
+deployment replay exit code: 1
+
+=== CI profile ===
+127.0.0.1 - - [25/Sep/2026 19:20:15] "GET /api/health HTTP/1.1" 200 -
+profile=ci public_base_path=''
+GET /api/health -> HTTP 200 {"status": "ok"}
+PASS: health endpoint responds under this configuration
+CI replay exit code: 0
+
+=== Regression suite ===
+test_ci_route (test_regression.HealthRouteTests.test_ci_route) ... 127.0.0.1 - - [25/Sep/2026 19:20:16] "GET /api/health HTTP/1.1" 200 -
+profile=ci public_base_path=''
+GET /api/health -> HTTP 200 {"status": "ok"}
+PASS: health endpoint responds under this configuration
+ok
+test_deployment_route (test_regression.HealthRouteTests.test_deployment_route) ... 127.0.0.1 - - [25/Sep/2026 19:20:16] "GET /service/api/health HTTP/1.1" 404 -
+profile=deployment public_base_path='/service'
+GET /service/api/health -> HTTP 404 {"error": "not found"}
+FAIL: expected HTTP 200 with status=ok
+FAIL
+
+======================================================================
+FAIL: test_deployment_route (test_regression.HealthRouteTests.test_deployment_route)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/workspace/scratch/0a4bce28c3d8/envreplay/test_regression.py", line 12, in test_deployment_route
+    self.assertEqual(check("deployment"), 0)
+AssertionError: 1 != 0
+
+----------------------------------------------------------------------
+Ran 2 tests in 1.008s
+
+FAILED (failures=1)
+regression suite exit code: 1
