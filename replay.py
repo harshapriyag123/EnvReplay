@@ -16,7 +16,7 @@ def check(profile):
     config = json.loads((ROOT / "config" / f"{profile}.json").read_text())
     base_path = config["public_base_path"]
     path = base_path + "/api/health"
-    server = serve()
+    server = serve(base_path=base_path)
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
