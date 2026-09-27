@@ -1,12 +1,37 @@
 # EnvReplay
 
-### CI said the app was healthy. Deployment returned 404.
+### CI passed. The deployed health check returned 404.
 
-EnvReplay lets you **see why this happened**, inspect the repair IBM Bob made in a separate workspace, and check the result for yourself.
+**EnvReplay** lets a developer reproduce this mismatch, give the failing evidence to IBM Bob, inspect Bob's code change, and verify the result independently.
 
-[Open the Incident Room](https://harshapriyag123.github.io/EnvReplay/) · [Inspect Bob run #6](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110) · [Read the recorded report](evidence/bob-run-6/report.md) · [See the patch](evidence/bob-run-6/bob.diff)
+[🚀 Launch the Incident Room](https://harshapriyag123.github.io/EnvReplay/) · [🎬 Follow the judge walkthrough](#judge-walkthrough) · [🧪 Reproduce the failure](#run-it-yourself) · [🤖 Inspect Bob's run](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110)
 
 ![EnvReplay cover: the deployment failure that CI could not see, with the public Incident Room](submission/cover.png)
+
+## Judge launchpad
+
+Each link opens an actual output or a specific part of the working product. Start with the live page; no account or installation is needed to inspect the saved run.
+
+| Open | What you will see | Result to look for |
+| --- | --- | --- |
+| 🧭 [**Live Incident Room**](https://harshapriyag123.github.io/EnvReplay/) | The interactive public walkthrough | CI **200** beside deployment **404** on the original revision |
+| 🚨 [**Symptom**](https://harshapriyag123.github.io/EnvReplay/#symptom) | Both configuration profiles and request paths | Deployment adds `/service` to the public path |
+| ▶️ [**Replay**](https://harshapriyag123.github.io/EnvReplay/#replay) | Captured commands; choose **Deployment**, then **Compare** | The original request returns **404 / exit 1**; after Bob it returns **200 / exit 0** |
+| 🤖 [**Bob repair**](https://harshapriyag123.github.io/EnvReplay/#bob) | Bob Shell task ID and tabs for the two changed files | A reviewable patch to `app.py` and `replay.py` |
+| ✅ [**Verification**](https://harshapriyag123.github.io/EnvReplay/#verification) | Before/after exit codes; expand the exact commands | CI stays **0**; deployment and regression change from **1 to 0** |
+| 📄 [**Raw run report**](evidence/bob-run-6/report.json) | Saved commands and recorded output from run #6 | The same results shown in the interface |
+
+<a id="judge-walkthrough"></a>
+
+### The 90-second judge walkthrough
+
+1. **0:00–0:20 — Open [Symptom](https://harshapriyag123.github.io/EnvReplay/#symptom).** CI asks for `/api/health`; deployment asks for `/service/api/health`. The original service only answers the first request.
+2. **0:20–0:45 — Open [Replay](https://harshapriyag123.github.io/EnvReplay/#replay).** Select **Deployment**, then **Compare**. Read the actual failing command, its HTTP 404, and the HTTP 200 after Bob's isolated repair.
+3. **0:45–1:05 — Open [Bob repair](https://harshapriyag123.github.io/EnvReplay/#bob).** Inspect the real task ID and switch between Bob's `app.py` and `replay.py` patch tabs. The [Actions run](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110) records the Shell execution.
+4. **1:05–1:30 — Open [Verification](https://harshapriyag123.github.io/EnvReplay/#verification).** CI stays passing, while deployment and regression change from exit 1 to 0. Expand the commands or open the [raw report](evidence/bob-run-6/report.json) to check the proof.
+
+> [!NOTE]
+> The Incident Room shows an **archived Bob Shell run**. It is an interactive evidence viewer, not a live Bob session. The [hackathon guide](https://lablab-ibm-bob-2-hackathon-guide.s3.us.cloud-object-storage.appdomain.cloud/index.html#upload-bob-task-session-summary) separately requires genuine **Bob IDE task-session summaries**. Those files are not in this repository yet.
 
 ## What is this, in plain English?
 
@@ -19,16 +44,9 @@ EnvReplay walks through this **one real, repeatable example**. It shows the two 
 > [!IMPORTANT]
 > The version on `main` is already repaired and returns 200 for both addresses. That reference repair was written earlier by Codex. IBM Bob Shell separately repaired the original broken version in a temporary workspace. Bob's patch is saved for inspection and was not merged into `main`. The commands below explain how to see the original 404.
 
-## Jump to
+## Read more
 
-- [The problem at a glance](#the-problem-at-a-glance)
-- [Explore the working interface](#explore-the-working-interface)
-- [How the repair works](#how-the-repair-works)
-- [Run it yourself](#run-it-yourself)
-- [All runnable commands](#all-runnable-commands)
-- [Bob's recorded repair](#bobs-recorded-repair)
-- [Evidence and attribution](#evidence-and-attribution)
-- [Repository map](#repository-map)
+[📊 Results](#the-problem-at-a-glance) · [🧩 How the repair works](#how-the-repair-works) · [⌨️ Quick start](#run-it-yourself) · [🛠️ Every command](#all-runnable-commands) · [🔎 Evidence and attribution](#evidence-and-attribution) · [🗂️ Files](#repository-map)
 
 ## The problem at a glance
 
@@ -175,6 +193,18 @@ The [reference repair on `main`](app.py) was authored earlier by **Codex at the 
 **Hackathon evidence boundary:** Run #6 proves IBM Bob **Shell** usage. The hackathon [submission guide](https://lablab-ibm-bob-2-hackathon-guide.s3.us.cloud-object-storage.appdomain.cloud/index.html#upload-bob-task-session-summary) separately requires Bob **IDE** as a core component and genuine IDE task-session summary screenshots. None are present in this repository. Do not label Shell logs, website screenshots, or the public interface as IDE task summaries.
 
 This prototype demonstrates one deterministic base path mismatch. It does not claim to discover arbitrary deployment failures. Its value is the traceable sequence from a specific failing request, through an isolated Bob repair, to repeatable verification.
+
+## Hackathon submission materials
+
+These links lead to prepared files. A recording script is not a finished video; the repository does not currently contain an MP4 or genuine Bob IDE task-session screenshots.
+
+| Item | Open | What to use it for |
+| --- | --- | --- |
+| 🖼️ Cover | [View cover](submission/cover.png) | Project thumbnail for the submission form. |
+| 📊 Slides | [Download pitch deck](submission/envreplay-pitch.pptx) | Presentation draft to review and upload. |
+| 🎙️ Video | [Open recording guide](submission/video-script.md) | Shot list and narration for an actual screen recording. |
+| 📝 Submission copy | [Open prepared answers](submission/submission-copy.md) | Review the problem, solution, and Bob usage statements before submitting. |
+| 📋 Checklist | [Open submission kit](submission/README.md) | See remaining evidence and upload steps. |
 
 ## Repository map
 
