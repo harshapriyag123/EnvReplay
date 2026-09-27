@@ -79,6 +79,10 @@ The runner writes `report.json`, `report.md`, `before.json`, and `bob.diff` unde
 3. In **Bob repair**, show the real task ID, [successful Actions run](https://github.com/harshapriyag123/EnvReplay/actions/runs/36223374110), and `app.py` / `replay.py` patch tabs.
 4. In **Verification**, show all independent exit codes and expand the exact commands. Follow an evidence link to its checked-in source file.
 
+## Submission materials
+
+The [submission kit](submission/README.md) contains a cover image, editable four-slide pitch deck, form statements, and a timed video recording guide. These are prepared materials, not proof that a video was recorded or a submission was made. The required Bob IDE task-session summary screenshots are still missing; see the [evidence boundary](#hackathon-evidence-boundary) below before submitting.
+
 ## Repository map
 
 | Path | Purpose |
